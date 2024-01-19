@@ -115,8 +115,15 @@ def build_playlist(words):
     while words_left > 0:
         #build block
         print(f"DEBUG: block index: {block_index}, playlist length: {len(playlist)}")
+        #if we hit a full dead end, then pop the last block, get the indices, and skip a word
+        if block_index == -1:
+            failed_block = playlist.pop()
+            block_index = failed_block.index #
+            word_index = failed_block.word_index + 1
+            words_left -= 1
+            print(f"DEAD END: new block index: {block_index}, word_index: {word_index}")
         #if block already exists (back tracking), just grab it
-        if block_index < set_length:
+        if block_index < len(playlist):
             print(f"block at {block_index} exists, continuing with it")
             block = playlist[block_index]
         else: #if block doesn't exist yet, build it
@@ -126,7 +133,11 @@ def build_playlist(words):
             else:
                 size_list = generate_phrase_size_list(6)
             block = PlaylistBuildingBlock(block_index, word_index, size_list, None, None, None)
-            playlist.append(block)
+            #if the set length is longer then the block index ( + 1 ?) then just replace using the block index. Otherwise append
+            if (set_length > block_index):
+                playlist[block_index] = block
+            else:
+                playlist.append(block)
         #if block has sizes not tried yet, continue with that block. If not, backtrack.
         print(f"DEBUG: not tried list for block:{block_index} is: {block.not_tried}")
         if block.not_tried:
@@ -153,6 +164,7 @@ def build_playlist(words):
                     word_index += size
                     words_left -= size
                     block_index += 1
+                    set_length += 1
                 else: 
                     print(f"DEBUG: not matches somehow")
             #don't change the block_index or nothing, then when we are back at top of loop, we grab the same block from the playlist
